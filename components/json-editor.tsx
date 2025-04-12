@@ -166,10 +166,11 @@ export function JsonEditor() {
   const handleJsonChange = (value: string) => {
     setJsonEditorValue(value)
 
-    try {
-      const parsedJson = JSON.parse(value)
-
-      if (selectedRow !== null) {
+    if (selectedRow !== null) {
+      setEditedRows(prev => new Set(prev).add(selectedRow))
+      
+      try {
+        const parsedJson = JSON.parse(value)
         const updatedData = [...data]
         updatedData[selectedRow] = {
           ...updatedData[selectedRow],
@@ -179,12 +180,10 @@ export function JsonEditor() {
         }
         setData(updatedData)
         setError(null)
-      }
-    } catch (e) {
-      // Show error while editing
-      setError(`JSON Error: ${e.message}`)
-      
-      if (selectedRow !== null) {
+      } catch (e) {
+        // Show error while editing
+        setError(`JSON Error: ${e.message}`)
+        
         const updatedData = [...data]
         updatedData[selectedRow] = {
           ...updatedData[selectedRow],
@@ -192,9 +191,6 @@ export function JsonEditor() {
           isValid: false,
         }
         setData(updatedData)
-        if (selectedRow !== null) {
-          setEditedRows(prev => new Set(prev).add(selectedRow))
-        }
       }
     }
   }
