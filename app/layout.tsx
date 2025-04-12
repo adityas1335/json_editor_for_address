@@ -29,7 +29,7 @@ export default function RootLayout({
           <div className="min-h-screen bg-background">
             <header className="border-b">
               <div className="container flex items-center justify-between h-16">
-                <h1 className="text-xl font-bold">My App</h1>
+                <h1 className="text-xl font-bold">Annotation Tool🔨</h1>
                 <ThemeToggle />
               </div>
             </header>
