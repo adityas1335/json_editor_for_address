@@ -148,9 +148,21 @@ export function JsonEditor() {
           isValid: true,
         }
         setData(updatedData)
+        setError(null)
       }
     } catch (e) {
-      // Don't update the data if JSON is invalid, but allow editing to continue
+      // Show error while editing
+      setError(`JSON Error: ${e.message}`)
+      
+      if (selectedRow !== null) {
+        const updatedData = [...data]
+        updatedData[selectedRow] = {
+          ...updatedData[selectedRow],
+          json: value,
+          isValid: false,
+        }
+        setData(updatedData)
+      }
     }
   }
 
