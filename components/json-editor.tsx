@@ -371,14 +371,32 @@ export function JsonEditor() {
                         />
                       </div>
                     )}
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={formatJson}>
-                        Format JSON
-                      </Button>
-                      <Button className="flex items-center gap-2">
-                        <Save className="h-4 w-4" />
-                        Save Changes
-                      </Button>
+                    <div className="flex justify-between items-center gap-2">
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => selectedRow > 0 && handleRowSelect(selectedRow - 1)}
+                          disabled={selectedRow === 0}
+                        >
+                          Previous Row
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => selectedRow < data.length - 1 && handleRowSelect(selectedRow + 1)}
+                          disabled={selectedRow === data.length - 1}
+                        >
+                          Next Row
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={formatJson}>
+                          Format JSON
+                        </Button>
+                        <Button className="flex items-center gap-2">
+                          <Save className="h-4 w-4" />
+                          Save Changes
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
