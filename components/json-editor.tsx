@@ -46,10 +46,36 @@ const JsonEditorComponent: React.FC<JsonEditorComponentProps> = ({ value, onChan
 }
 
 export function JsonEditor() {
-  const [data, setData] = useState<DataRow[]>([])
-  const [selectedRow, setSelectedRow] = useState<number | null>(null)
+  const [data, setData] = useState<DataRow[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('jsonEditorData')
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
+  })
+  const [selectedRow, setSelectedRow] = useState<number | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('selectedRow')
+      return saved ? parseInt(saved) : null
+    }
+    return null
+  })
   const [jsonEditorValue, setJsonEditorValue] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
+
+  // Save data to localStorage whenever it changes
+  useEffect(() => {
+    if (data.length > 0) {
+      localStorage.setItem('jsonEditorData', JSON.stringify(data))
+    }
+  }, [data])
+
+  // Save selected row to localStorage
+  useEffect(() => {
+    if (selectedRow !== null) {
+      localStorage.setItem('selectedRow', selectedRow.toString())
+    }
+  }, [selectedRow])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -167,6 +193,13 @@ export function JsonEditor() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    
+    // Clear localStorage after successful export
+    localStorage.removeItem('jsonEditorData')
+    localStorage.removeItem('selectedRow')
+    setData([])
+    setSelectedRow(null)
+    setJsonEditorValue("")
   }
 
   const formatJson = () => {
