@@ -1,0 +1,55 @@
+Unhandled Runtime Error
+
+Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+See more info here: https://nextjs.org/docs/messages/react-hydration-error
+
+
+  ...
+    <RenderFromTemplateContext>
+      <ScrollAndFocusHandler segmentPath={[...]}>
+        <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+          <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+            <LoadingBoundary loading={null}>
+              <HTTPAccessFallbackBoundary notFound={[...]} forbidden={undefined} unauthorized={undefined}>
+                <HTTPAccessFallbackErrorBoundary pathname="/" notFound={[...]} forbidden={undefined} ...>
+                  <RedirectBoundary>
+                    <RedirectErrorBoundary router={{...}}>
+                      <InnerLayoutRouter url="/" tree={[...]} cacheNode={{lazyData:null, ...}} segmentPath={[...]}>
+                        <Home>
+                          <div className="container ...">
+                            <h1>
+                            <p>
+                            <JsonEditor>
+                              <div className="grid gap-6">
+                                <div>
++                               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        ...
+components/json-editor.tsx (247:9) @ JsonEditor
+
+
+  245 |
+  246 |       {data.length > 0 && selectedRow !== null && (
+> 247 |         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      |         ^
+  248 |           <Card className="lg:col-span-1">
+  249 |             <CardHeader>
+  250 |               <CardTitle>Data Rows</CardTitle>
+Call Stack
+12
+
+Show 9 ignore-listed frame(s)
+div
+<anonymous> (0:0)
+JsonEditor
+components/json-editor.tsx (247:9)
+Home
+app/page.tsx (10:7)
