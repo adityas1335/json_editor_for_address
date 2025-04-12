@@ -44,20 +44,20 @@ const JsonEditorComponent: React.FC<JsonEditorComponentProps> = ({ value, onChan
 }
 
 export function JsonEditor() {
-  const [data, setData] = useState<DataRow[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('jsonEditorData')
-      return saved ? JSON.parse(saved) : []
+  const [data, setData] = useState<DataRow[]>([])
+  const [selectedRow, setSelectedRow] = useState<number | null>(null)
+
+  useEffect(() => {
+    const savedData = localStorage.getItem('jsonEditorData')
+    if (savedData) {
+      setData(JSON.parse(savedData))
     }
-    return []
-  })
-  const [selectedRow, setSelectedRow] = useState<number | null>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('selectedRow')
-      return saved ? parseInt(saved) : null
+    
+    const savedRow = localStorage.getItem('selectedRow')
+    if (savedRow) {
+      setSelectedRow(parseInt(savedRow))
     }
-    return null
-  })
+  }, [])
   const [jsonEditorValue, setJsonEditorValue] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
 
