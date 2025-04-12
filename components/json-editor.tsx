@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import Papa from "papaparse"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -150,7 +148,7 @@ export function JsonEditor() {
           isValid: true,
         }
         setData(updatedData)
-        
+
         // Auto-save as CSV
         const csvContent = [["Text", "JSON"], ...updatedData.map((row) => [row.plainText, row.json])]
         const csv = Papa.unparse(csvContent)
@@ -193,7 +191,7 @@ export function JsonEditor() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    
+
     // Clear localStorage after successful export
     localStorage.removeItem('jsonEditorData')
     localStorage.removeItem('selectedRow')
