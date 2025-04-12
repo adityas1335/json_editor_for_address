@@ -148,19 +148,6 @@ export function JsonEditor() {
           isValid: true,
         }
         setData(updatedData)
-
-        // Auto-save as CSV
-        const csvContent = [["Text", "JSON"], ...updatedData.map((row) => [row.plainText, row.json])]
-        const csv = Papa.unparse(csvContent)
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement("a")
-        link.setAttribute("href", url)
-        link.setAttribute("download", "auto_saved_data.csv")
-        link.style.visibility = "hidden"
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
       }
     } catch (e) {
       // Don't update the data if JSON is invalid, but allow editing to continue
