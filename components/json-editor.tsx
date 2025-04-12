@@ -262,6 +262,7 @@ export function JsonEditor() {
                   <div className="space-y-4">
                     {data[selectedRow]?.isValid ? (
                       <JsonEditorComponent
+                        key={selectedRow} // Add key to force re-render on row change
                         value={data[selectedRow]?.parsedJson}
                         onChange={(updatedJson) => {
                           const jsonString = JSON.stringify(updatedJson, null, 2)
