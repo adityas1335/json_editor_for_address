@@ -47,6 +47,34 @@ export function JsonEditor() {
   const [data, setData] = useState<DataRow[]>([])
   const [selectedRow, setSelectedRow] = useState<number | null>(null)
 
+  // Add event listener for browser close
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (data.length > 0) {
+        const now = new Date()
+        const date = now.toISOString().split('T')[0]
+        const time = now.toTimeString().split(' ')[0].replace(/:/g, '-')
+        const filename = `Annotated_Data_${date}_${time}.csv`
+        
+        const csvContent = [["Text", "JSON"], ...data.map((row) => [row.plainText, row.json])]
+        const csv = Papa.unparse(csvContent)
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+        const url = URL.createObjectURL(blob)
+        
+        const link = document.createElement("a")
+        link.setAttribute("href", url)
+        link.setAttribute("download", filename)
+        link.style.visibility = "hidden"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [data])
+
   useEffect(() => {
     const savedData = localStorage.getItem('jsonEditorData')
     if (savedData) {
