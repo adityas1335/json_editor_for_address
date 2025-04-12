@@ -46,6 +46,8 @@ const JsonEditorComponent: React.FC<JsonEditorComponentProps> = ({ value, onChan
 export function JsonEditor() {
   const [data, setData] = useState<DataRow[]>([])
   const [selectedRow, setSelectedRow] = useState<number | null>(null)
+  const [visitedRows, setVisitedRows] = useState<Set<number>>(new Set())
+  const [editedRows, setEditedRows] = useState<Set<number>>(new Set())
 
   // Add event listener for browser close
   useEffect(() => {
@@ -190,17 +192,17 @@ export function JsonEditor() {
           isValid: false,
         }
         setData(updatedData)
+        if (selectedRow !== null) {
+          setEditedRows(prev => new Set(prev).add(selectedRow))
+        }
       }
     }
   }
 
   const handleRowSelect = (index: number) => {
     setSelectedRow(index)
-
-    // Update the jsonEditorValue with the selected row's JSON
+    setVisitedRows(prev => new Set(prev).add(index))
     setJsonEditorValue(data[index].json)
-
-    // Reset any error that might be showing
     setError(null)
   }
 
@@ -294,7 +296,10 @@ export function JsonEditor() {
                       onClick={() => handleRowSelect(index)}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="bg-muted text-muted-foreground rounded-full h-6 w-6 flex items-center justify-center text-xs font-medium">
+                        <span className={`rounded-full h-6 w-6 flex items-center justify-center text-xs font-medium
+                          ${editedRows.has(index) ? 'bg-green-500/20 text-green-700 dark:text-green-300' : 
+                            visitedRows.has(index) ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300' : 
+                            'bg-muted text-muted-foreground'}`}>
                           {index + 1}
                         </span>
                         <div className="font-medium truncate">{row.plainText}</div>
