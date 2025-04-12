@@ -354,6 +354,7 @@ export function JsonEditor() {
                             isValid: true,
                           }
                           setData(updatedData)
+                          setEditedRows(prev => new Set(prev).add(selectedRow))
                         }}
                       />
                     ) : (
