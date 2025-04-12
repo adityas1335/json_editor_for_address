@@ -178,6 +178,12 @@ export function JsonEditor() {
 
   const exportData = () => {
     const csvContent = [["Text", "JSON"], ...data.map((row) => [row.plainText, row.json])]
+    
+    // Get current date and time
+    const now = new Date()
+    const date = now.toISOString().split('T')[0]
+    const time = now.toTimeString().split(' ')[0].replace(/:/g, '-')
+    const filename = `Annotated_Data_${date}_${time}.csv`
 
     const csv = Papa.unparse(csvContent)
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
@@ -185,7 +191,7 @@ export function JsonEditor() {
 
     const link = document.createElement("a")
     link.setAttribute("href", url)
-    link.setAttribute("download", "exported_data.csv")
+    link.setAttribute("download", filename)
     link.style.visibility = "hidden"
     document.body.appendChild(link)
     link.click()
