@@ -8,8 +8,8 @@ import { ThemeToggle } from "@/components/theme-toggle"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "My Application",
-  description: "A modern web application",
+  title: "Annotator",
+  description: "A Advance Address Annotation Tool",
 }
 
 export default function RootLayout({

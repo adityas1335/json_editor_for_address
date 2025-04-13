@@ -4,11 +4,11 @@ import React, { useState, useEffect } from "react"
 import Papa from "papaparse"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { AlertCircle, FileUp, Download, Save } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { JsonEditorComponent } from "@/components/json-editor-component"
 
 interface DataRow {
   plainText: string
@@ -151,8 +151,12 @@ export function JsonEditor() {
           setSelectedRow(0)
           setJsonEditorValue(parsedData[0].json)
         } catch (err) {
-          setError(err.message || "Failed to parse CSV file")
-        }
+          if (err instanceof Error) {
+            setError(err.message || "Failed to parse CSV file")
+          } else {
+            setError("Failed to parse CSV file")
+          }
+        }        
       },
       error: (error) => {
         setError(`Error parsing CSV: ${error.message}`)
@@ -181,9 +185,11 @@ export function JsonEditor() {
         setData(updatedData)
         setError(null)
       } catch (e) {
-        // Show error while editing
-        setError(`JSON Error: ${e.message}`)
-        
+        if (e instanceof Error) {
+          setError(`JSON Error: ${e.message}`)
+        } else {
+          setError(`JSON Error: ${String(e)}`)
+        }
         const updatedData = [...data]
         updatedData[selectedRow] = {
           ...updatedData[selectedRow],
@@ -191,7 +197,7 @@ export function JsonEditor() {
           isValid: false,
         }
         setData(updatedData)
-      }
+      }   
     }
   }
 
