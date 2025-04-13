@@ -4,11 +4,11 @@ import React, { useState, useEffect } from "react"
 import Papa from "papaparse"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { AlertCircle, FileUp, Download, Save } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { JsonEditorComponent } from "@/components/json-editor-component"
 
 interface DataRow {
   plainText: string
