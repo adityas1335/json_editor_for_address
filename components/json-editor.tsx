@@ -336,13 +336,33 @@ export function JsonEditor() {
 
           <Card className="lg:col-span-2">
             <CardHeader>
-              <div className="mb-4">
-                <Tabs defaultValue="edit" className="w-full">
+              <div className="mb-4 flex justify-between items-center">
+                <Tabs defaultValue="edit">
                   <TabsList>
                     <TabsTrigger value="edit">Edit</TabsTrigger>
                     <TabsTrigger value="preview">Preview</TabsTrigger>
                   </TabsList>
                 </Tabs>
+                <div className="flex gap-2">
+                  <Input
+                    id="searchInput"
+                    className="w-64"
+                    placeholder="Selected text will appear here..."
+                    value={selectedText}
+                    readOnly
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const selectedText = window?.getSelection()?.toString();
+                      if (selectedText) {
+                        window.open(`https://www.google.com/maps/search/${encodeURIComponent(selectedText)}`, '_blank');
+                      }
+                    }}
+                  >
+                    Search Maps
+                  </Button>
+                </div>
               </div>
               <CardTitle>{data[selectedRow]?.plainText || "JSON Editor"}</CardTitle>
             </CardHeader>
@@ -356,26 +376,7 @@ export function JsonEditor() {
                 </div>
                 <TabsContent value="edit">
                   <div className="space-y-4">
-                    <div className="flex justify-end gap-2 mb-2">
-                      <Input
-                        id="searchInput"
-                        className="w-64"
-                        placeholder="Selected text will appear here..."
-                        value={selectedText}
-                        readOnly
-                      />
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          const selectedText = window?.getSelection()?.toString();
-                          if (selectedText) {
-                            window.open(`https://www.google.com/maps/search/${encodeURIComponent(selectedText)}`, '_blank');
-                          }
-                        }}
-                      >
-                        Search Maps
-                      </Button>
-                    </div>
+                    
                     {data[selectedRow]?.isValid ? (
                       <JsonEditorComponent
                         key={selectedRow} // Add key to force re-render on row change
