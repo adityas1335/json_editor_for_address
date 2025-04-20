@@ -337,12 +337,7 @@ export function JsonEditor() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <div className="mb-4 flex justify-between items-center">
-                <Tabs defaultValue="edit">
-                  <TabsList>
-                    <TabsTrigger value="edit">Edit</TabsTrigger>
-                    <TabsTrigger value="preview">Preview</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <h2 className="text-lg font-semibold">Address</h2>
                 <div className="flex gap-2">
                   <Input
                     id="searchInput"
@@ -367,15 +362,7 @@ export function JsonEditor() {
               <CardTitle>{data[selectedRow]?.plainText || "JSON Editor"}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="edit">
-                <div className="hidden">
-                  <TabsList>
-                    <TabsTrigger value="edit">Edit</TabsTrigger>
-                    <TabsTrigger value="preview">Preview</TabsTrigger>
-                  </TabsList>
-                </div>
-                <TabsContent value="edit">
-                  <div className="space-y-4">
+              <div className="space-y-4">
                     
                     {data[selectedRow]?.isValid ? (
                       <JsonEditorComponent
@@ -447,17 +434,7 @@ export function JsonEditor() {
                       </div>
                     </div>
                   </div>
-                </TabsContent>
-                <TabsContent value="preview">
-                  <div className="border rounded-md p-4 h-[400px] overflow-auto bg-muted/50">
-                    <pre className="text-sm">
-                      {data[selectedRow]?.isValid
-                        ? JSON.stringify(data[selectedRow]?.parsedJson, null, 2)
-                        : "Invalid JSON"}
-                    </pre>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                </div>
             </CardContent>
           </Card>
         </div>
