@@ -27,7 +27,25 @@ type JsonEditorComponentProps = {
 
 // Define a simple JSON editor component (replace with a more robust one if needed)
 const JsonEditorComponent: React.FC<JsonEditorComponentProps> = ({ value, onChange }) => {
-  const [jsonString, setJsonString] = useState(JSON.stringify(value, null, 2))
+  // Convert null values to empty strings for display
+  const convertNullToEmptyString = (obj: any): any => {
+    if (obj === null) return "";
+
+    if (typeof obj !== 'object') return obj;
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => convertNullToEmptyString(item));
+    }
+
+    const result: any = {};
+    for (const key in obj) {
+      result[key] = convertNullToEmptyString(obj[key]);
+    }
+    return result;
+  };
+
+  const displayValue = convertNullToEmptyString(value);
+  const [jsonString, setJsonString] = useState(JSON.stringify(displayValue, null, 2))
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
@@ -59,7 +77,39 @@ export function JsonEditor() {
         const time = now.toTimeString().split(' ')[0].replace(/:/g, '-')
         const filename = `Annotated_Data_${date}_${time}.csv`
 
-        const csvContent = [["Text", "JSON"], ...data.map((row) => [row.plainText, row.json])]
+        // Convert empty strings back to null before exporting
+        const processedData = data.map(row => {
+          // Convert the JSON string back to object, replace empty strings with null, then back to string
+          let processedJson = row.json;
+          try {
+            const jsonObj = JSON.parse(row.json);
+            const convertEmptyToNull = (obj: any): any => {
+              if (obj === "") return null;
+
+              if (typeof obj !== 'object' || obj === null) return obj;
+
+              if (Array.isArray(obj)) {
+                return obj.map(item => convertEmptyToNull(item));
+              }
+
+              const result: any = {};
+              for (const key in obj) {
+                result[key] = convertEmptyToNull(obj[key]);
+              }
+              return result;
+            };
+
+            const processed = convertEmptyToNull(jsonObj);
+            processedJson = JSON.stringify(processed);
+          } catch (e) {
+            // If parsing fails, just use the original json
+            console.error("Error processing JSON for export:", e);
+          }
+
+          return [row.plainText, processedJson];
+        });
+
+        const csvContent = [["Text", "JSON"], ...processedData];
         const csv = Papa.unparse(csvContent)
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
         const url = URL.createObjectURL(blob)
@@ -142,6 +192,27 @@ export function JsonEditor() {
 
             try {
               parsedJson = JSON.parse(row[1])
+
+              // Convert null values to empty strings when loading
+              const convertNullToEmptyString = (obj: any): any => {
+                if (obj === null) return "";
+
+                if (typeof obj !== 'object') return obj;
+
+                if (Array.isArray(obj)) {
+                  return obj.map(item => convertNullToEmptyString(item));
+                }
+
+                const result: any = {};
+                for (const key in obj) {
+                  result[key] = convertNullToEmptyString(obj[key]);
+                }
+                return result;
+              };
+
+              parsedJson = convertNullToEmptyString(parsedJson);
+              // Update the json string to reflect the changes
+              row[1] = JSON.stringify(parsedJson);
             } catch (e) {
               isValid = false
             }
@@ -180,36 +251,59 @@ export function JsonEditor() {
   }
 
   const handleJsonChange = (value: string) => {
-    setJsonEditorValue(value)
+    setJsonEditorValue(value);
 
     if (selectedRow !== null) {
-      setEditedRows(prev => new Set(prev).add(selectedRow))
+      setEditedRows(prev => new Set(prev).add(selectedRow));
 
       try {
-        const parsedJson = JSON.parse(value)
-        const updatedData = [...data]
+        const parsedJson = JSON.parse(value);
+
+        // Convert any null values to empty strings
+        const convertNullToEmptyString = (obj: any): any => {
+          if (obj === null) return "";
+
+          if (typeof obj !== 'object') return obj;
+
+          if (Array.isArray(obj)) {
+            return obj.map(item => convertNullToEmptyString(item));
+          }
+
+          const result: any = {};
+          for (const key in obj) {
+            result[key] = convertNullToEmptyString(obj[key]);
+          }
+          return result;
+        };
+
+        const processedJson = convertNullToEmptyString(parsedJson);
+        const processedJsonString = JSON.stringify(processedJson, null, 2);
+
+        const updatedData = [...data];
         updatedData[selectedRow] = {
           ...updatedData[selectedRow],
-          json: value,
-          parsedJson,
+          json: processedJsonString,
+          parsedJson: processedJson,
           isValid: true,
-        }
-        setData(updatedData)
-        setError(null)
+        };
+
+        setData(updatedData);
+        setJsonEditorValue(processedJsonString);
+        setError(null);
       } catch (e) {
         if (e instanceof Error) {
-          setError(`JSON Error: ${e.message}`)
+          setError(`JSON Error: ${e.message}`);
         } else {
-          setError(`JSON Error: ${String(e)}`)
+          setError(`JSON Error: ${String(e)}`);
         }
-        const updatedData = [...data]
+        const updatedData = [...data];
         updatedData[selectedRow] = {
           ...updatedData[selectedRow],
           json: value,
           isValid: false,
-        }
-        setData(updatedData)
-      }   
+        };
+        setData(updatedData);
+      }
     }
   }
 
@@ -221,14 +315,44 @@ export function JsonEditor() {
   }
 
   const exportData = () => {
-    const csvContent = [["Text", "JSON"], ...data.map((row) => [row.plainText, row.json])]
-
-    // Get current date and time
     const now = new Date()
     const date = now.toISOString().split('T')[0]
     const time = now.toTimeString().split(' ')[0].replace(/:/g, '-')
     const filename = `Annotated_Data_${date}_${time}.csv`
 
+    // Convert empty strings back to null before exporting
+    const processedData = data.map(row => {
+      // Convert the JSON string back to object, replace empty strings with null, then back to string
+      let processedJson = row.json;
+      try {
+        const jsonObj = JSON.parse(row.json);
+        const convertEmptyToNull = (obj: any): any => {
+          if (obj === "") return null;
+
+          if (typeof obj !== 'object' || obj === null) return obj;
+
+          if (Array.isArray(obj)) {
+            return obj.map(item => convertEmptyToNull(item));
+          }
+
+          const result: any = {};
+          for (const key in obj) {
+            result[key] = convertEmptyToNull(obj[key]);
+          }
+          return result;
+        };
+
+        const processed = convertEmptyToNull(jsonObj);
+        processedJson = JSON.stringify(processed);
+      } catch (e) {
+        // If parsing fails, just use the original json
+        console.error("Error processing JSON for export:", e);
+      }
+
+      return [row.plainText, processedJson];
+    });
+
+    const csvContent = [["Text", "JSON"], ...processedData];
     const csv = Papa.unparse(csvContent)
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
@@ -368,18 +492,36 @@ export function JsonEditor() {
                     key={selectedRow} // Add key to force re-render on row change
                     value={data[selectedRow]?.parsedJson}
                     onChange={(updatedJson) => {
-                      const jsonString = JSON.stringify(updatedJson, null, 2)
-                      setJsonEditorValue(jsonString)
+                      // Convert any null values to empty strings
+                      const convertNullToEmptyString = (obj: any): any => {
+                        if (obj === null) return "";
 
-                      const updatedData = [...data]
+                        if (typeof obj !== 'object') return obj;
+
+                        if (Array.isArray(obj)) {
+                          return obj.map(item => convertNullToEmptyString(item));
+                        }
+
+                        const result: any = {};
+                        for (const key in obj) {
+                          result[key] = convertNullToEmptyString(obj[key]);
+                        }
+                        return result;
+                      };
+
+                      const processedJson = convertNullToEmptyString(updatedJson);
+                      const jsonString = JSON.stringify(processedJson, null, 2);
+                      setJsonEditorValue(jsonString);
+
+                      const updatedData = [...data];
                       updatedData[selectedRow] = {
                         ...updatedData[selectedRow],
                         json: jsonString,
-                        parsedJson: updatedJson,
+                        parsedJson: processedJson,
                         isValid: true,
-                      }
-                      setData(updatedData)
-                      setEditedRows(prev => new Set(prev).add(selectedRow))
+                      };
+                      setData(updatedData);
+                      setEditedRows(prev => new Set(prev).add(selectedRow));
                     }}
                   />
                 ) : (
