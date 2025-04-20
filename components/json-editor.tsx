@@ -91,6 +91,17 @@ export function JsonEditor() {
   }, [])
   const [jsonEditorValue, setJsonEditorValue] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
+  const [selectedText, setSelectedText] = useState<string>("")
+
+  useEffect(() => {
+    const handleSelection = () => {
+      const selection = window.getSelection()?.toString() || ""
+      setSelectedText(selection)
+    }
+
+    document.addEventListener('selectionchange', handleSelection)
+    return () => document.removeEventListener('selectionchange', handleSelection)
+  }, [])
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
@@ -345,6 +356,26 @@ export function JsonEditor() {
                 </div>
                 <TabsContent value="edit">
                   <div className="space-y-4">
+                    <div className="flex justify-end gap-2 mb-2">
+                      <Input
+                        id="searchInput"
+                        className="w-64"
+                        placeholder="Selected text will appear here..."
+                        value={selectedText}
+                        readOnly
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const selectedText = window?.getSelection()?.toString();
+                          if (selectedText) {
+                            window.open(`https://www.google.com/maps/search/${encodeURIComponent(selectedText)}`, '_blank');
+                          }
+                        }}
+                      >
+                        Search Maps
+                      </Button>
+                    </div>
                     {data[selectedRow]?.isValid ? (
                       <JsonEditorComponent
                         key={selectedRow} // Add key to force re-render on row change
@@ -396,24 +427,7 @@ export function JsonEditor() {
                         </Button>
                       </div>
                       <div className="flex gap-2 items-center">
-                        <Input
-                          id="searchInput"
-                          className="w-64"
-                          placeholder="Selected text will appear here..."
-                          value={window?.getSelection()?.toString() || ''}
-                          readOnly
-                        />
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            const selectedText = window?.getSelection()?.toString();
-                            if (selectedText) {
-                              window.open(`https://www.google.com/maps/search/${encodeURIComponent(selectedText)}`, '_blank');
-                            }
-                          }}
-                        >
-                          Search Maps
-                        </Button>
+                        
                         <Button variant="outline" onClick={formatJson}>
                           Format JSON
                         </Button>
