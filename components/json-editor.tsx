@@ -363,78 +363,75 @@ export function JsonEditor() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                    
-                    {data[selectedRow]?.isValid ? (
-                      <JsonEditorComponent
-                        key={selectedRow} // Add key to force re-render on row change
-                        value={data[selectedRow]?.parsedJson}
-                        onChange={(updatedJson) => {
-                          const jsonString = JSON.stringify(updatedJson, null, 2)
-                          setJsonEditorValue(jsonString)
+                {data[selectedRow]?.isValid ? (
+                  <JsonEditorComponent
+                    key={selectedRow} // Add key to force re-render on row change
+                    value={data[selectedRow]?.parsedJson}
+                    onChange={(updatedJson) => {
+                      const jsonString = JSON.stringify(updatedJson, null, 2)
+                      setJsonEditorValue(jsonString)
 
-                          const updatedData = [...data]
-                          updatedData[selectedRow] = {
-                            ...updatedData[selectedRow],
-                            json: jsonString,
-                            parsedJson: updatedJson,
-                            isValid: true,
-                          }
-                          setData(updatedData)
-                          setEditedRows(prev => new Set(prev).add(selectedRow))
-                        }}
-                      />
-                    ) : (
-                      <div className="space-y-4">
-                        <Alert variant="destructive" className="mb-4">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertTitle>Invalid JSON</AlertTitle>
-                          <AlertDescription>The JSON in this row is invalid. Please fix it below.</AlertDescription>
-                        </Alert>
-                        <Textarea
-                          value={jsonEditorValue}
-                          onChange={(e) => handleJsonChange(e.target.value)}
-                          className="font-mono h-[350px]"
-                        />
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center gap-2">
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => selectedRow > 0 && handleRowSelect(selectedRow - 1)}
-                          disabled={selectedRow === 0}
-                        >
-                          Previous Row
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => selectedRow < data.length - 1 && handleRowSelect(selectedRow + 1)}
-                          disabled={selectedRow === data.length - 1}
-                        >
-                          Next Row
-                        </Button>
-                      </div>
-                      <div>
-                        <Button
-                            variant="outline"
-                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data[selectedRow]?.plainText || '')}`, '_blank')}
-                          >
-                            View on Maps
-                          </Button>
-                        </div>
-                      <div className="flex gap-2 items-center">
-                        
-                        <Button variant="outline" onClick={formatJson}>
-                          Format JSON
-                        </Button>
-                        <Button className="flex items-center gap-2">
-                          <Save className="h-4 w-4" />
-                          Save Changes
-                        </Button>
-                      </div>
+                      const updatedData = [...data]
+                      updatedData[selectedRow] = {
+                        ...updatedData[selectedRow],
+                        json: jsonString,
+                        parsedJson: updatedJson,
+                        isValid: true,
+                      }
+                      setData(updatedData)
+                      setEditedRows(prev => new Set(prev).add(selectedRow))
+                    }}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Invalid JSON</AlertTitle>
+                      <AlertDescription>The JSON in this row is invalid. Please fix it below.</AlertDescription>
+                    </Alert>
+                    <Textarea
+                      value={jsonEditorValue}
+                      onChange={(e) => handleJsonChange(e.target.value)}
+                      className="font-mono h-[350px]"
+                    />
+                  </div>
+                )}
+                <div className="flex justify-between items-center gap-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => selectedRow > 0 && handleRowSelect(selectedRow - 1)}
+                      disabled={selectedRow === 0}
+                    >
+                      Previous Row
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => selectedRow < data.length - 1 && handleRowSelect(selectedRow + 1)}
+                      disabled={selectedRow === data.length - 1}
+                    >
+                      Next Row
+                    </Button>
+                  </div>
+                  <div>
+                    <Button
+                        variant="outline"
+                        onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data[selectedRow]?.plainText || '')}`, '_blank')}
+                      >
+                        View on Maps
+                      </Button>
                     </div>
+                  <div className="flex gap-2 items-center">
+                    <Button variant="outline" onClick={formatJson}>
+                      Format JSON
+                    </Button>
+                    <Button className="flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      Save Changes
+                    </Button>
                   </div>
                 </div>
+              </div>
             </CardContent>
           </Card>
         </div>
