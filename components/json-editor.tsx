@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { AlertCircle, FileUp, Download, Save } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"; // Assuming Input component exists
 
 interface DataRow {
   plainText: string
@@ -57,12 +58,12 @@ export function JsonEditor() {
         const date = now.toISOString().split('T')[0]
         const time = now.toTimeString().split(' ')[0].replace(/:/g, '-')
         const filename = `Annotated_Data_${date}_${time}.csv`
-        
+
         const csvContent = [["Text", "JSON"], ...data.map((row) => [row.plainText, row.json])]
         const csv = Papa.unparse(csvContent)
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
         const url = URL.createObjectURL(blob)
-        
+
         const link = document.createElement("a")
         link.setAttribute("href", url)
         link.setAttribute("download", filename)
@@ -82,7 +83,7 @@ export function JsonEditor() {
     if (savedData) {
       setData(JSON.parse(savedData))
     }
-    
+
     const savedRow = localStorage.getItem('selectedRow')
     if (savedRow) {
       setSelectedRow(parseInt(savedRow))
@@ -172,7 +173,7 @@ export function JsonEditor() {
 
     if (selectedRow !== null) {
       setEditedRows(prev => new Set(prev).add(selectedRow))
-      
+
       try {
         const parsedJson = JSON.parse(value)
         const updatedData = [...data]
@@ -210,7 +211,7 @@ export function JsonEditor() {
 
   const exportData = () => {
     const csvContent = [["Text", "JSON"], ...data.map((row) => [row.plainText, row.json])]
-    
+
     // Get current date and time
     const now = new Date()
     const date = now.toISOString().split('T')[0]
@@ -394,7 +395,25 @@ export function JsonEditor() {
                           Next Row
                         </Button>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          id="searchInput"
+                          className="w-64"
+                          placeholder="Selected text will appear here..."
+                          value={window?.getSelection()?.toString() || ''}
+                          readOnly
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const selectedText = window?.getSelection()?.toString();
+                            if (selectedText) {
+                              window.open(`https://www.google.com/maps/search/${encodeURIComponent(selectedText)}`, '_blank');
+                            }
+                          }}
+                        >
+                          Search Maps
+                        </Button>
                         <Button variant="outline" onClick={formatJson}>
                           Format JSON
                         </Button>
