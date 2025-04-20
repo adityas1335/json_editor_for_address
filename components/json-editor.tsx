@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { AlertCircle, FileUp, Download, Save } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"; // Assuming Input component exists
 
 interface DataRow {
   plainText: string
@@ -26,7 +27,25 @@ type JsonEditorComponentProps = {
 
 // Define a simple JSON editor component (replace with a more robust one if needed)
 const JsonEditorComponent: React.FC<JsonEditorComponentProps> = ({ value, onChange }) => {
-  const [jsonString, setJsonString] = useState(JSON.stringify(value, null, 2))
+  // Convert null values to empty strings for display
+  const convertNullToEmptyString = (obj: any): any => {
+    if (obj === null) return "";
+
+    if (typeof obj !== 'object') return obj;
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => convertNullToEmptyString(item));
+    }
+
+    const result: any = {};
+    for (const key in obj) {
+      result[key] = convertNullToEmptyString(obj[key]);
+    }
+    return result;
+  };
+
+  const displayValue = convertNullToEmptyString(value);
+  const [jsonString, setJsonString] = useState(JSON.stringify(displayValue, null, 2))
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
@@ -57,12 +76,44 @@ export function JsonEditor() {
         const date = now.toISOString().split('T')[0]
         const time = now.toTimeString().split(' ')[0].replace(/:/g, '-')
         const filename = `Annotated_Data_${date}_${time}.csv`
-        
-        const csvContent = [["Text", "JSON"], ...data.map((row) => [row.plainText, row.json])]
+
+        // Convert empty strings back to null before exporting
+        const processedData = data.map(row => {
+          // Convert the JSON string back to object, replace empty strings with null, then back to string
+          let processedJson = row.json;
+          try {
+            const jsonObj = JSON.parse(row.json);
+            const convertEmptyToNull = (obj: any): any => {
+              if (obj === "") return null;
+
+              if (typeof obj !== 'object' || obj === null) return obj;
+
+              if (Array.isArray(obj)) {
+                return obj.map(item => convertEmptyToNull(item));
+              }
+
+              const result: any = {};
+              for (const key in obj) {
+                result[key] = convertEmptyToNull(obj[key]);
+              }
+              return result;
+            };
+
+            const processed = convertEmptyToNull(jsonObj);
+            processedJson = JSON.stringify(processed);
+          } catch (e) {
+            // If parsing fails, just use the original json
+            console.error("Error processing JSON for export:", e);
+          }
+
+          return [row.plainText, processedJson];
+        });
+
+        const csvContent = [["Text", "JSON"], ...processedData];
         const csv = Papa.unparse(csvContent)
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
         const url = URL.createObjectURL(blob)
-        
+
         const link = document.createElement("a")
         link.setAttribute("href", url)
         link.setAttribute("download", filename)
@@ -82,7 +133,7 @@ export function JsonEditor() {
     if (savedData) {
       setData(JSON.parse(savedData))
     }
-    
+
     const savedRow = localStorage.getItem('selectedRow')
     if (savedRow) {
       setSelectedRow(parseInt(savedRow))
@@ -90,6 +141,17 @@ export function JsonEditor() {
   }, [])
   const [jsonEditorValue, setJsonEditorValue] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
+  const [selectedText, setSelectedText] = useState<string>("")
+
+  useEffect(() => {
+    const handleSelection = () => {
+      const selection = window.getSelection()?.toString() || ""
+      setSelectedText(selection)
+    }
+
+    document.addEventListener('selectionchange', handleSelection)
+    return () => document.removeEventListener('selectionchange', handleSelection)
+  }, [])
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
@@ -130,6 +192,27 @@ export function JsonEditor() {
 
             try {
               parsedJson = JSON.parse(row[1])
+
+              // Convert null values to empty strings when loading
+              const convertNullToEmptyString = (obj: any): any => {
+                if (obj === null) return "";
+
+                if (typeof obj !== 'object') return obj;
+
+                if (Array.isArray(obj)) {
+                  return obj.map(item => convertNullToEmptyString(item));
+                }
+
+                const result: any = {};
+                for (const key in obj) {
+                  result[key] = convertNullToEmptyString(obj[key]);
+                }
+                return result;
+              };
+
+              parsedJson = convertNullToEmptyString(parsedJson);
+              // Update the json string to reflect the changes
+              row[1] = JSON.stringify(parsedJson);
             } catch (e) {
               isValid = false
             }
@@ -168,36 +251,59 @@ export function JsonEditor() {
   }
 
   const handleJsonChange = (value: string) => {
-    setJsonEditorValue(value)
+    setJsonEditorValue(value);
 
     if (selectedRow !== null) {
-      setEditedRows(prev => new Set(prev).add(selectedRow))
-      
+      setEditedRows(prev => new Set(prev).add(selectedRow));
+
       try {
-        const parsedJson = JSON.parse(value)
-        const updatedData = [...data]
+        const parsedJson = JSON.parse(value);
+
+        // Convert any null values to empty strings
+        const convertNullToEmptyString = (obj: any): any => {
+          if (obj === null) return "";
+
+          if (typeof obj !== 'object') return obj;
+
+          if (Array.isArray(obj)) {
+            return obj.map(item => convertNullToEmptyString(item));
+          }
+
+          const result: any = {};
+          for (const key in obj) {
+            result[key] = convertNullToEmptyString(obj[key]);
+          }
+          return result;
+        };
+
+        const processedJson = convertNullToEmptyString(parsedJson);
+        const processedJsonString = JSON.stringify(processedJson, null, 2);
+
+        const updatedData = [...data];
         updatedData[selectedRow] = {
           ...updatedData[selectedRow],
-          json: value,
-          parsedJson,
+          json: processedJsonString,
+          parsedJson: processedJson,
           isValid: true,
-        }
-        setData(updatedData)
-        setError(null)
+        };
+
+        setData(updatedData);
+        setJsonEditorValue(processedJsonString);
+        setError(null);
       } catch (e) {
         if (e instanceof Error) {
-          setError(`JSON Error: ${e.message}`)
+          setError(`JSON Error: ${e.message}`);
         } else {
-          setError(`JSON Error: ${String(e)}`)
+          setError(`JSON Error: ${String(e)}`);
         }
-        const updatedData = [...data]
+        const updatedData = [...data];
         updatedData[selectedRow] = {
           ...updatedData[selectedRow],
           json: value,
           isValid: false,
-        }
-        setData(updatedData)
-      }   
+        };
+        setData(updatedData);
+      }
     }
   }
 
@@ -209,14 +315,44 @@ export function JsonEditor() {
   }
 
   const exportData = () => {
-    const csvContent = [["Text", "JSON"], ...data.map((row) => [row.plainText, row.json])]
-    
-    // Get current date and time
     const now = new Date()
     const date = now.toISOString().split('T')[0]
     const time = now.toTimeString().split(' ')[0].replace(/:/g, '-')
     const filename = `Annotated_Data_${date}_${time}.csv`
 
+    // Convert empty strings back to null before exporting
+    const processedData = data.map(row => {
+      // Convert the JSON string back to object, replace empty strings with null, then back to string
+      let processedJson = row.json;
+      try {
+        const jsonObj = JSON.parse(row.json);
+        const convertEmptyToNull = (obj: any): any => {
+          if (obj === "") return null;
+
+          if (typeof obj !== 'object' || obj === null) return obj;
+
+          if (Array.isArray(obj)) {
+            return obj.map(item => convertEmptyToNull(item));
+          }
+
+          const result: any = {};
+          for (const key in obj) {
+            result[key] = convertEmptyToNull(obj[key]);
+          }
+          return result;
+        };
+
+        const processed = convertEmptyToNull(jsonObj);
+        processedJson = JSON.stringify(processed);
+      } catch (e) {
+        // If parsing fails, just use the original json
+        console.error("Error processing JSON for export:", e);
+      }
+
+      return [row.plainText, processedJson];
+    });
+
+    const csvContent = [["Text", "JSON"], ...processedData];
     const csv = Papa.unparse(csvContent)
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
@@ -324,98 +460,120 @@ export function JsonEditor() {
 
           <Card className="lg:col-span-2">
             <CardHeader>
-              <div className="mb-4">
-                <Tabs defaultValue="edit" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="edit">Edit</TabsTrigger>
-                    <TabsTrigger value="preview">Preview</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+              <div className="mb-4 flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Address</h2>
+                <div className="flex gap-2">
+                  <Input
+                    id="searchInput"
+                    className="w-64"
+                    placeholder="Selected text will appear here..."
+                    value={selectedText}
+                    readOnly
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const selectedText = window?.getSelection()?.toString();
+                      if (selectedText) {
+                        window.open(`https://www.google.com/maps/search/${encodeURIComponent(selectedText)}`, '_blank');
+                      }
+                    }}
+                  >
+                    Search Maps
+                  </Button>
+                </div>
               </div>
               <CardTitle>{data[selectedRow]?.plainText || "JSON Editor"}</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="edit">
-                <div className="hidden">
-                  <TabsList>
-                    <TabsTrigger value="edit">Edit</TabsTrigger>
-                    <TabsTrigger value="preview">Preview</TabsTrigger>
-                  </TabsList>
-                </div>
-                <TabsContent value="edit">
-                  <div className="space-y-4">
-                    {data[selectedRow]?.isValid ? (
-                      <JsonEditorComponent
-                        key={selectedRow} // Add key to force re-render on row change
-                        value={data[selectedRow]?.parsedJson}
-                        onChange={(updatedJson) => {
-                          const jsonString = JSON.stringify(updatedJson, null, 2)
-                          setJsonEditorValue(jsonString)
+              <div className="space-y-4">
+                {data[selectedRow]?.isValid ? (
+                  <JsonEditorComponent
+                    key={selectedRow} // Add key to force re-render on row change
+                    value={data[selectedRow]?.parsedJson}
+                    onChange={(updatedJson) => {
+                      // Convert any null values to empty strings
+                      const convertNullToEmptyString = (obj: any): any => {
+                        if (obj === null) return "";
 
-                          const updatedData = [...data]
-                          updatedData[selectedRow] = {
-                            ...updatedData[selectedRow],
-                            json: jsonString,
-                            parsedJson: updatedJson,
-                            isValid: true,
-                          }
-                          setData(updatedData)
-                          setEditedRows(prev => new Set(prev).add(selectedRow))
-                        }}
-                      />
-                    ) : (
-                      <div className="space-y-4">
-                        <Alert variant="destructive" className="mb-4">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertTitle>Invalid JSON</AlertTitle>
-                          <AlertDescription>The JSON in this row is invalid. Please fix it below.</AlertDescription>
-                        </Alert>
-                        <Textarea
-                          value={jsonEditorValue}
-                          onChange={(e) => handleJsonChange(e.target.value)}
-                          className="font-mono h-[350px]"
-                        />
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center gap-2">
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => selectedRow > 0 && handleRowSelect(selectedRow - 1)}
-                          disabled={selectedRow === 0}
-                        >
-                          Previous Row
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => selectedRow < data.length - 1 && handleRowSelect(selectedRow + 1)}
-                          disabled={selectedRow === data.length - 1}
-                        >
-                          Next Row
-                        </Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={formatJson}>
-                          Format JSON
-                        </Button>
-                        <Button className="flex items-center gap-2">
-                          <Save className="h-4 w-4" />
-                          Save Changes
-                        </Button>
-                      </div>
+                        if (typeof obj !== 'object') return obj;
+
+                        if (Array.isArray(obj)) {
+                          return obj.map(item => convertNullToEmptyString(item));
+                        }
+
+                        const result: any = {};
+                        for (const key in obj) {
+                          result[key] = convertNullToEmptyString(obj[key]);
+                        }
+                        return result;
+                      };
+
+                      const processedJson = convertNullToEmptyString(updatedJson);
+                      const jsonString = JSON.stringify(processedJson, null, 2);
+                      setJsonEditorValue(jsonString);
+
+                      const updatedData = [...data];
+                      updatedData[selectedRow] = {
+                        ...updatedData[selectedRow],
+                        json: jsonString,
+                        parsedJson: processedJson,
+                        isValid: true,
+                      };
+                      setData(updatedData);
+                      setEditedRows(prev => new Set(prev).add(selectedRow));
+                    }}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Invalid JSON</AlertTitle>
+                      <AlertDescription>The JSON in this row is invalid. Please fix it below.</AlertDescription>
+                    </Alert>
+                    <Textarea
+                      value={jsonEditorValue}
+                      onChange={(e) => handleJsonChange(e.target.value)}
+                      className="font-mono h-[350px]"
+                    />
+                  </div>
+                )}
+                <div className="flex justify-between items-center gap-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => selectedRow > 0 && handleRowSelect(selectedRow - 1)}
+                      disabled={selectedRow === 0}
+                    >
+                      Previous Row
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => selectedRow < data.length - 1 && handleRowSelect(selectedRow + 1)}
+                      disabled={selectedRow === data.length - 1}
+                    >
+                      Next Row
+                    </Button>
+                  </div>
+                  <div>
+                    <Button
+                        variant="outline"
+                        onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data[selectedRow]?.plainText || '')}`, '_blank')}
+                      >
+                        View on Maps
+                      </Button>
                     </div>
+                  <div className="flex gap-2 items-center">
+                    <Button variant="outline" onClick={formatJson}>
+                      Format JSON
+                    </Button>
+                    <Button className="flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      Save Changes
+                    </Button>
                   </div>
-                </TabsContent>
-                <TabsContent value="preview">
-                  <div className="border rounded-md p-4 h-[400px] overflow-auto bg-muted/50">
-                    <pre className="text-sm">
-                      {data[selectedRow]?.isValid
-                        ? JSON.stringify(data[selectedRow]?.parsedJson, null, 2)
-                        : "Invalid JSON"}
-                    </pre>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

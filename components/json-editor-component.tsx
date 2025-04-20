@@ -127,7 +127,12 @@ export function JsonEditorComponent({ value, onChange, path = [] }: JsonEditorCo
     if (val === null) {
       return (
         <div className="flex items-center">
-          <span className="text-muted-foreground italic">null</span>
+          <Input
+            type="text"
+            value=""
+            onChange={(e) => handleValueChange(e.target.value, keyPath)}
+            className="h-8"
+          />
         </div>
       )
     }
