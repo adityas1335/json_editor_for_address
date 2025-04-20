@@ -427,6 +427,14 @@ export function JsonEditor() {
                           Next Row
                         </Button>
                       </div>
+                      <div>
+                        <Button
+                            variant="outline"
+                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data[selectedRow]?.plainText || '')}`, '_blank')}
+                          >
+                            View on Maps
+                          </Button>
+                        </div>
                       <div className="flex gap-2 items-center">
                         
                         <Button variant="outline" onClick={formatJson}>
